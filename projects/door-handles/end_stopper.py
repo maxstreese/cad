@@ -1,88 +1,69 @@
-"""End stopper for the curtain rail's lower (glider) channel.
+"""Stopper for the curtain rail's lower (glider) channel, entirely inside the rail.
 
-T-shaped slider: a flat body sits inside the channel, a stem passes down
-through the 6 mm slot and ends in a bumper below the rail. An M3 set screw
-(DIN 913, M3x10) runs up through a captive nut in the bumper. Tightening it
-presses the tip against the underside of the web, which pulls the slider
-down onto the bottom lips and clamps it in place.
+The body follows the channel's cross-section, including its rounded bottom,
+shrunk by the fit clearance all around. A short stem fills the 6 mm slot up
+to the rail's underside. An M3x5 set screw (flat point) threads straight
+into a 2.5 mm hole in the plastic and is reached from below through the slot
+with a 1.5 mm hex key. Tightening it presses the tip against the underside
+of the web; the reaction pushes the body down into the rounded bottom of the
+channel, which centres it and clamps it along the whole curve. Since nothing
+sticks out, it can be clamped anywhere along the rail.
 
 Coordinates match context.rail(): x across, z up from the rail bottom,
-the stopper is pushed in along +y (the +y end is the chamfered nose).
+the stopper is pushed in along +y (the +y end is the tapered nose).
 """
 
-from build123d import Axis, Location, Part, chamfer, fillet
+from build123d import Location, Part, offset
 
 from cadkit import present
-from cadkit.features import box, hex_nut_slot, vertical_hole
-from context import rail, screw
+from cadkit.features import box, loft_profiles, vertical_hole
+from context import channel_cavity, rail, screw
 from params import (
-    FIT_HEIGHT,
     FIT_SLIDE,
     FIT_SLOT,
-    M3_CLEARANCE,
-    M3_NUT_AF,
-    M3_NUT_HEIGHT,
-    RAIL_CHANNEL_HEIGHT,
-    RAIL_LIP,
+    M3_TAP_DRILL,
     RAIL_SLOT,
-    RAIL_WALL,
-    RAIL_WIDTH,
-    STOPPER_BUMPER_GAP,
-    STOPPER_BUMPER_HEIGHT,
-    STOPPER_BUMPER_WIDTH,
+    RAIL_WEB_BOTTOM,
+    SET_SCREW_LENGTH,
     STOPPER_LENGTH,
     STOPPER_NOSE_CHAMFER,
 )
 
-BUMPER_TOP = -STOPPER_BUMPER_GAP
-BUMPER_BOTTOM = BUMPER_TOP - STOPPER_BUMPER_HEIGHT
-SLIDER_TOP = RAIL_LIP + RAIL_CHANNEL_HEIGHT - FIT_HEIGHT
-NUT_Z = BUMPER_BOTTOM + 1.6  # bottom of the nut pocket
 
+def build(length: float = STOPPER_LENGTH, slide: float = FIT_SLIDE, slot: float = FIT_SLOT) -> Part:
+    """The stopper; `length` and the clearances are parameters so the fit test can vary them."""
+    # Body = channel cross-section shrunk by the clearance all around, with a
+    # 45 degree lead-in taper on the nose so it pushes into the rail easily.
+    profile = offset(channel_cavity(), -slide)
+    nose_profile = offset(channel_cavity(), -slide - STOPPER_NOSE_CHAMFER)
+    nose_start = length - STOPPER_NOSE_CHAMFER
+    body = loft_profiles([(0, profile), (nose_start, profile), (length, nose_profile)])
 
-def t_body(length: float, slide: float = FIT_SLIDE, slot: float = FIT_SLOT) -> Part:
-    """Slider + stem + bumper, without screw features. Also used by the fit test."""
-    y = (0, length)
-    slider_half = RAIL_WIDTH / 2 - RAIL_WALL - slide
+    # Stem in the slot. Its bottom sits `slide` above the rail's underside, so it
+    # ends up flush once the screw has pushed the body down into its seat. It
+    # stops where the nose taper starts, so it never pokes out through the taper.
     stem_half = RAIL_SLOT / 2 - slot
+    stem = box((-stem_half, stem_half), (0, nose_start), (slide, 2.0))
 
-    slider = box((-slider_half, slider_half), y, (RAIL_LIP, SLIDER_TOP))
-    # Lead-in chamfer on the nose so it pushes into the rail easily.
-    nose = slider.faces().sort_by(Axis.Y)[-1]
-    slider = chamfer(nose.edges(), STOPPER_NOSE_CHAMFER)
-
-    stem = box((-stem_half, stem_half), y, (BUMPER_TOP, RAIL_LIP))
-
-    bumper_half = STOPPER_BUMPER_WIDTH / 2
-    bumper = box((-bumper_half, bumper_half), y, (BUMPER_BOTTOM, BUMPER_TOP))
-    bumper = fillet(bumper.edges().filter_by(Axis.Y).group_by(Axis.Z)[0], 1.5)
-
-    return slider + stem + bumper
-
-
-def build() -> Part:
-    yc = STOPPER_LENGTH / 2
-    part = t_body(STOPPER_LENGTH)
-    part -= vertical_hole(0, yc, (BUMPER_BOTTOM - 1, SLIDER_TOP + 1), M3_CLEARANCE)
-    part -= hex_nut_slot(
-        0, yc, (NUT_Z, NUT_Z + M3_NUT_HEIGHT), M3_NUT_AF, STOPPER_BUMPER_WIDTH
-    )
+    part = body + stem
+    part -= vertical_hole(0, length / 2, (0, RAIL_WEB_BOTTOM), M3_TAP_DRILL)
     return part
 
 
 if __name__ == "__main__":
     stopper = build()
-
     inset = 5.0  # how far the stopper sits inside the rail end in the preview
-    web_z = RAIL_LIP + RAIL_CHANNEL_HEIGHT
     present(
         "end_stopper",
         stopper,
         project="door-handles",
-        # Stand it on its back end: the T profile lies flat on the bed, no supports.
-        print_orientation=Location((0, 0, 0), (90, 0, 0)),
+        # Upside down: the flat top on the bed, the rounded bottom facing up
+        # (no overhangs), and the screw hole printed vertically for good threads.
+        print_orientation=Location((0, 0, 0), (180, 0, 0)),
         context={
             "rail": rail(60).moved(Location((0, -inset, 0))),
-            "set_screw_m3x10": screw(0, STOPPER_LENGTH / 2, (web_z - 10, web_z), 3.0),
+            "set_screw_m3x5": screw(
+                0, STOPPER_LENGTH / 2, (RAIL_WEB_BOTTOM - SET_SCREW_LENGTH, RAIL_WEB_BOTTOM), 3.0
+            ),
         },
     )

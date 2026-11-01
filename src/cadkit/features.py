@@ -1,6 +1,45 @@
 """Small geometry helpers shared across projects."""
 
-from build123d import Align, Box, Cylinder, Part, Pos, RegularPolygon, extrude
+from build123d import (
+    Align,
+    Box,
+    Cylinder,
+    Face,
+    Location,
+    Part,
+    Pos,
+    RegularPolygon,
+    Rot,
+    Sketch,
+    extrude,
+    loft,
+)
+
+# Cross-section profiles are drawn in the XY plane and read as (x, z), as seen
+# looking along -y (from the +y end back). The helpers below run them along +y.
+
+
+def extrude_profile(profile: Face | Sketch, y: tuple[float, float]) -> Part:
+    """Extrude a cross-section profile along +y from y[0] to y[1]."""
+    return _along_y(extrude(profile, y[1] - y[0]), y[0])
+
+
+def loft_profiles(sections: list[tuple[float, Face | Sketch]]) -> Part:
+    """Ruled loft through cross-section profiles placed at increasing y values.
+
+    E.g. [(0, p), (9.4, p), (10, p_shrunk)] gives a straight body with a lead-in
+    taper on its +y end, as one solid. Building it in one piece instead of
+    unioning an extrusion and a taper avoids invalid seams on curved profiles.
+    """
+    y0 = sections[0][0]
+    faces = [Pos(0, 0, y - y0) * profile.faces()[0] for y, profile in sections]
+    return _along_y(loft(faces, ruled=True), y0)
+
+
+def _along_y(solid: Part, y0: float) -> Part:
+    """Map a solid built along +Z from z=0 onto world +y from y0 (drawing y -> world z)."""
+    # Rot X +90: (x, y, z) -> (x, -z, y); then Rot Z 180: -> (-x, z, y).
+    return Pos(0, y0, 0) * Rot(0, 0, 180) * Rot(90, 0, 0) * solid
 
 
 def box(x: tuple[float, float], y: tuple[float, float], z: tuple[float, float]) -> Part:

@@ -2,16 +2,16 @@
 
 | Part | What it does |
 |---|---|
-| `drill_template` | Corner template that hooks over the door's side and top edges and guides the drill for both handle screws |
-| `end_stopper` | T-shaped stopper for the curtain rail's glider channel, clamped with an M3 set screw |
-| `fit_test` | Rail slugs with different clearances + a drill gauge; print first and pick the best fits |
+| `drill_template` | Template for the door's top right corner; fences hook over the right and top edges, holes 28 mm from both edges and 96 mm apart |
+| `end_stopper` | Stopper that sits entirely inside the curtain rail's glider channel, clamped anywhere with an M3 set screw |
+| `fit_test` | Four mini stoppers with different clearances (coded by length) + a drill gauge; print first and pick the best fits |
 
-Status: **draft**. Rail inner dimensions are estimates from the manufacturer's
-drawing and the handle/door numbers are placeholders; see `params.py`.
+Status: drill template ready to print; stopper is a **draft**. Rail inner dimensions
+are traced from the manufacturer's drawing (see `params.py`), so print the fit test first.
 
 ## Hardware
 
-- End stopper: 1x M3 hex nut (ISO 4032), 1x M3x10 set screw (DIN 913 / ISO 4026) per stopper
+- End stopper: 1x M3x5 set screw, flat point (DIN 913 / ISO 4026), per stopper; it cuts its own thread into the plastic. Tighten with a 1.5 mm hex key through the slot.
 
 ## Print sheet (draft)
 
