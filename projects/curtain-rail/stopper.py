@@ -52,11 +52,11 @@ def build(length: float = STOPPER_LENGTH, slide: float = FIT_SLIDE, slot: float 
 
 if __name__ == "__main__":
     stopper = build()
-    inset = 5.0  # how far the stopper sits inside the rail end in the preview
+    inset = 5.0  # how far the stopper sits inside the rail in the preview
     present(
-        "end_stopper",
+        "stopper",
         stopper,
-        project="door-handles",
+        project="curtain-rail",
         # Upside down: the flat top on the bed, the rounded bottom facing up
         # (no overhangs), and the screw hole printed vertically for good threads.
         print_orientation=Location((0, 0, 0), (180, 0, 0)),

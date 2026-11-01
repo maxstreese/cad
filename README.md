@@ -16,7 +16,7 @@ mise run setup  # installs Python 3.13 + dependencies into .venv
 ## Workflow
 
 ```sh
-mise run view projects/door-handles/end_stopper.py   # show in browser + export
+mise run view projects/curtain-rail/stopper.py       # show in browser + export
 mise run build door-handles                          # export every part of a project
 ```
 
