@@ -31,7 +31,7 @@ from params import (
 
 
 def build(length: float = STOPPER_LENGTH, slide: float = FIT_SLIDE, slot: float = FIT_SLOT) -> Part:
-    """The stopper; `length` and the clearances are parameters so the fit test can vary them."""
+    """The stopper; `length` and the clearances can be overridden."""
     # Body = channel cross-section shrunk by the clearance all around, with a
     # 45 degree lead-in taper on the nose so it pushes into the rail easily.
     profile = offset(channel_cavity(), -slide)
